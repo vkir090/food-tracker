@@ -638,7 +638,7 @@ const ComparisonTable = ({
           <tr>
             <th>{translate(language, "category")}</th>
             <th>{translate(language, "currentLabel")}</th>
-            <th>{translate(language, "averageLabel")}</th>
+            <th>{translate(language, "averageSymbol")}</th>
             <th>{translate(language, "deltaLabel")}</th>
           </tr>
         </thead>

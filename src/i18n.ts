@@ -51,6 +51,7 @@ type TranslationKey =
   | "warningOverspend"
   | "addFundsLabel"
   | "averageLabel"
+  | "averageSymbol"
   | "modeCumulative"
   | "modeDaily"
   | "categoryFilter"
@@ -112,6 +113,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     warningOverspend: "This expense exceeds your base amount and will make it negative.",
     addFundsLabel: "Add amount",
     averageLabel: "Average",
+    averageSymbol: "Avg",
     modeCumulative: "Cumulative",
     modeDaily: "Daily",
     categoryFilter: "Category filter",
@@ -172,6 +174,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     warningOverspend: "Diese Ausgabe übersteigt den Grundbetrag und wird ihn ins Minus bringen.",
     addFundsLabel: "Betrag hinzufügen",
     averageLabel: "Durchschnitt",
+    averageSymbol: "Ø",
     modeCumulative: "Kumuliert",
     modeDaily: "Täglich",
     categoryFilter: "Kategorie-Filter",
@@ -232,6 +235,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     warningOverspend: "Эта трата превысит баланс и уведет его в минус.",
     addFundsLabel: "Добавить сумму",
     averageLabel: "Среднее",
+    averageSymbol: "⌀",
     modeCumulative: "Накопительно",
     modeDaily: "По дням",
     categoryFilter: "Фильтр по категории",
