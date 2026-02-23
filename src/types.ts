@@ -2,10 +2,12 @@ export type Language = "en" | "de" | "ru";
 
 export const CATEGORIES = {
   ESSEN: "ESSEN",
-  HAUSMITTEL: "HAUSMITTEL"
+  HAUSMITTEL: "HAUSMITTEL",
+  ENTERTAINMENT: "ENTERTAINMENT"
 } as const;
 
 export type Category = (typeof CATEGORIES)[keyof typeof CATEGORIES];
+export type CategoryFilter = Category | "ALL";
 
 export type ExpenseEntry = {
   id: string;
@@ -20,6 +22,7 @@ export type MonthlyGoal = {
   monthKey: string; // YYYY-MM
   essenGoal: number | null;
   hausmittelGoal: number | null;
+  entertainmentGoal: number | null;
   combinedGoal?: number | null;
 };
 
@@ -38,6 +41,7 @@ export type AppState = {
 export type CategoryTotals = {
   essen: number;
   hausmittel: number;
+  entertainment: number;
   total: number;
 };
 
@@ -45,6 +49,7 @@ export type MonthlyHistoryPoint = {
   monthKey: string;
   essen: number;
   hausmittel: number;
+  entertainment: number;
   total: number;
 };
 

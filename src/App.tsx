@@ -3,19 +3,38 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis
 } from "recharts";
 import { formatCurrency, languageOptions, translate } from "./i18n";
-import { defaultState, buildHistoryPoints, computePaceSnapshot, getMonthGoals, getMonthTotals } from "./logic";
+import {
+  defaultState,
+  buildHistoryPoints,
+  computeDailySeries,
+  computePaceSnapshot,
+  getMonthGoals,
+  getMonthTotals
+} from "./logic";
 import { loadState, saveState } from "./storage";
 import { getBerlinTodayString, getCurrentMonthKey, getMonthKeyFromDateString, formatMonthLabel } from "./dateUtils";
-import { Category, ExpenseEntry, Language, MonthlyGoal } from "./types";
+import { Category, CategoryFilter, ExpenseEntry, Language, MonthlyGoal } from "./types";
 
 type TabKey = "dashboard" | "stats" | "settings";
+
+const CATEGORY_COLORS: Record<Category | "total", string> = {
+  ESSEN: "#3b82f6",
+  HAUSMITTEL: "#f59e0b",
+  ENTERTAINMENT: "#8b5cf6",
+  total: "#111827"
+};
 
 const randomId = () => Math.random().toString(36).slice(2, 10);
 
@@ -81,6 +100,7 @@ const ExpenseModal = ({
             <select value={category} onChange={(e) => setCategory(e.target.value as Category)}>
               <option value="ESSEN">{translate(language, "essen")}</option>
               <option value="HAUSMITTEL">{translate(language, "hausmittel")}</option>
+              <option value="ENTERTAINMENT">{translate(language, "entertainment")}</option>
             </select>
           </div>
           <div>
@@ -161,23 +181,50 @@ const App = () => {
   const [tab, setTab] = useState<TabKey>("dashboard");
   const [showExpense, setShowExpense] = useState(false);
   const [showFunds, setShowFunds] = useState(false);
+  const [lineMode, setLineMode] = useState<"cumulative" | "daily">("cumulative");
+  const [lineCategory, setLineCategory] = useState<CategoryFilter>("ALL");
 
   const monthKey = getCurrentMonthKey();
+  const [pieMonthKey, setPieMonthKey] = useState(monthKey);
+  useEffect(() => {
+    setPieMonthKey(monthKey);
+  }, [monthKey]);
+
   const monthTotals = useMemo(() => getMonthTotals(state.expenses, monthKey), [state.expenses, monthKey]);
   const goals = useMemo(() => getMonthGoals(state.goals, monthKey), [state.goals, monthKey]);
-  const pace = useMemo(() => computePaceSnapshot(state.expenses, monthKey), [state.expenses, monthKey]);
+  const comparisonTargets = [
+    { key: "ALL" as CategoryFilter, label: "allCategories" },
+    { key: "ESSEN" as CategoryFilter, label: "essen" },
+    { key: "HAUSMITTEL" as CategoryFilter, label: "hausmittel" },
+    { key: "ENTERTAINMENT" as CategoryFilter, label: "entertainment" }
+  ];
+  const comparisons = useMemo(
+    () =>
+      comparisonTargets.map((target) => ({
+        ...target,
+        snapshot: computePaceSnapshot(state.expenses, monthKey, target.key)
+      })),
+    [state.expenses, monthKey]
+  );
+  const combinedSnapshot = comparisons.find((c) => c.key === "ALL")?.snapshot;
   const historyPoints = useMemo(() => buildHistoryPoints(state.expenses), [state.expenses]);
+  const dailySeries = useMemo(
+    () => computeDailySeries(state.expenses, monthKey, lineCategory),
+    [state.expenses, monthKey, lineCategory]
+  );
 
   const remainingEssen = goals.essenGoal != null ? goals.essenGoal - monthTotals.essen : null;
   const remainingHaus = goals.hausmittelGoal != null ? goals.hausmittelGoal - monthTotals.hausmittel : null;
+  const remainingEntertainment =
+    goals.entertainmentGoal != null ? goals.entertainmentGoal - monthTotals.entertainment : null;
   const remainingCombined = goals.combinedGoal != null ? goals.combinedGoal - monthTotals.total : null;
 
   const motivation =
-    !pace.hasHistory || pace.ratio == null
+    !combinedSnapshot || !combinedSnapshot.hasHistory || combinedSnapshot.ratio == null
       ? null
-      : pace.ratio <= 0.9
+      : combinedSnapshot.ratio <= 0.9
       ? "motivationPositive"
-      : pace.ratio <= 1.1
+      : combinedSnapshot.ratio <= 1.1
       ? "motivationNeutral"
       : "motivationCaution";
 
@@ -269,7 +316,7 @@ const App = () => {
 
           <div className="card">
             <h3 className="section-title">{translate(currentLang, "remainingBudgetTitle")}</h3>
-            <div className="grid cols-3">
+            <div className="grid cols-4">
               <BudgetTile
                 label={translate(currentLang, "essen")}
                 spent={monthTotals.essen}
@@ -285,6 +332,13 @@ const App = () => {
                 language={currentLang}
               />
               <BudgetTile
+                label={translate(currentLang, "entertainment")}
+                spent={monthTotals.entertainment}
+                goal={goals.entertainmentGoal}
+                remaining={remainingEntertainment}
+                language={currentLang}
+              />
+              <BudgetTile
                 label={translate(currentLang, "combined")}
                 spent={monthTotals.total}
                 goal={goals.combinedGoal ?? null}
@@ -297,18 +351,18 @@ const App = () => {
           <div className="grid cols-2">
             <div className="card">
               <h3 className="section-title">{translate(currentLang, "paceTitle")}</h3>
-              {!pace.hasHistory || pace.average == null ? (
+              {!combinedSnapshot || !combinedSnapshot.hasHistory || combinedSnapshot.average == null ? (
                 <p className="muted">{translate(currentLang, "paceNotEnough")}</p>
               ) : (
                 <>
                   <p>
-                    {pace.delta != null && pace.delta < 0
+                    {combinedSnapshot.delta != null && combinedSnapshot.delta < 0
                       ? translate(currentLang, "paceBelow", {
-                          amount: formatCurrency(Math.abs(pace.delta), currentLang)
+                          amount: formatCurrency(Math.abs(combinedSnapshot.delta), currentLang)
                         })
-                      : pace.delta != null && pace.delta > 0
+                      : combinedSnapshot.delta != null && combinedSnapshot.delta > 0
                       ? translate(currentLang, "paceAbove", {
-                          amount: formatCurrency(Math.abs(pace.delta), currentLang)
+                          amount: formatCurrency(Math.abs(combinedSnapshot.delta), currentLang)
                         })
                       : translate(currentLang, "paceClose")}
                   </p>
@@ -317,12 +371,15 @@ const App = () => {
                   </p>
                 </>
               )}
-              <p className="muted small">
-                {translate(currentLang, "currentMonth")}: {formatCurrency(pace.current, currentLang)}
-                {pace.average != null
-                  ? ` • ${translate(currentLang, "averageLabel")}: ${formatCurrency(pace.average, currentLang)}`
-                  : ""}
-              </p>
+              {combinedSnapshot && (
+                <p className="muted small">
+                  {translate(currentLang, "currentMonth")}: {formatCurrency(combinedSnapshot.current, currentLang)}
+                  {combinedSnapshot.average != null
+                    ? ` • ${translate(currentLang, "averageLabel")}: ${formatCurrency(combinedSnapshot.average, currentLang)}`
+                    : ""}
+                </p>
+              )}
+              <ComparisonTable language={currentLang} comparisons={comparisons} />
             </div>
 
             <div className="card">
@@ -356,7 +413,13 @@ const App = () => {
                     .map((e) => (
                       <tr key={e.id}>
                         <td>{e.date}</td>
-                        <td>{e.category === "ESSEN" ? translate(currentLang, "essen") : translate(currentLang, "hausmittel")}</td>
+                        <td>
+                          {e.category === "ESSEN"
+                            ? translate(currentLang, "essen")
+                            : e.category === "HAUSMITTEL"
+                            ? translate(currentLang, "hausmittel")
+                            : translate(currentLang, "entertainment")}
+                        </td>
                         <td>{e.note ?? "-"}</td>
                         <td>{formatCurrency(e.amount, currentLang)}</td>
                       </tr>
@@ -382,12 +445,133 @@ const App = () => {
                   <YAxis />
                   <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} labelFormatter={formatMonthLabel} />
                   <Legend />
-                  <Bar dataKey="essen" fill="#3b82f6" name={translate(currentLang, "essen")} />
-                  <Bar dataKey="hausmittel" fill="#f59e0b" name={translate(currentLang, "hausmittel")} />
-                  <Bar dataKey="total" fill="#111827" name={translate(currentLang, "combined")} />
+                  <Bar dataKey="essen" fill={CATEGORY_COLORS.ESSEN} name={translate(currentLang, "essen")} />
+                  <Bar dataKey="hausmittel" fill={CATEGORY_COLORS.HAUSMITTEL} name={translate(currentLang, "hausmittel")} />
+                  <Bar dataKey="entertainment" fill={CATEGORY_COLORS.ENTERTAINMENT} name={translate(currentLang, "entertainment")} />
+                  <Bar dataKey="total" fill={CATEGORY_COLORS.total} name={translate(currentLang, "combined")} />
                 </BarChart>
               </ResponsiveContainer>
             )}
+          </div>
+
+          <div className="card chart-card">
+            <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+              <h3 className="section-title">{translate(currentLang, "lineChartTitle")}</h3>
+              <div className="row" style={{ gap: 8 }}>
+                <button
+                  className={`btn ${lineMode === "cumulative" ? "" : "ghost"}`}
+                  onClick={() => setLineMode("cumulative")}
+                >
+                  {translate(currentLang, "modeCumulative")}
+                </button>
+                <button
+                  className={`btn ${lineMode === "daily" ? "" : "ghost"}`}
+                  onClick={() => setLineMode("daily")}
+                >
+                  {translate(currentLang, "modeDaily")}
+                </button>
+                <span className="muted small">{translate(currentLang, "categoryFilter")}</span>
+                <select
+                  value={lineCategory}
+                  onChange={(e) => setLineCategory(e.target.value as CategoryFilter)}
+                  style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                >
+                  <option value="ALL">{translate(currentLang, "allCategories")}</option>
+                  <option value="ESSEN">{translate(currentLang, "essen")}</option>
+                  <option value="HAUSMITTEL">{translate(currentLang, "hausmittel")}</option>
+                  <option value="ENTERTAINMENT">{translate(currentLang, "entertainment")}</option>
+                </select>
+              </div>
+            </div>
+            {dailySeries.days.length === 0 ? (
+              <p className="muted">{translate(currentLang, "emptyState")}</p>
+            ) : !dailySeries.hasHistory ? (
+              <p className="muted">{translate(currentLang, "historyNeeded")}</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={dailySeries.days.map((day, idx) => ({
+                    day,
+                    current: lineMode === "cumulative" ? dailySeries.currentCumulative[idx] : dailySeries.currentDaily[idx],
+                    average: lineMode === "cumulative" ? dailySeries.averageCumulative[idx] : dailySeries.averageDaily[idx]
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="current"
+                    stroke={CATEGORY_COLORS.total}
+                    name={translate(currentLang, "currentLabel")}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="average"
+                    stroke={CATEGORY_COLORS.ESSEN}
+                    name={translate(currentLang, "averageLabel")}
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          <div className="card chart-card">
+            <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+              <h3 className="section-title">{translate(currentLang, "pieChartTitle")}</h3>
+              <div className="row" style={{ gap: 8 }}>
+                <label className="muted small" htmlFor="pie-month">
+                  {translate(currentLang, "monthLabel")}
+                </label>
+                <select
+                  id="pie-month"
+                  value={pieMonthKey}
+                  onChange={(e) => setPieMonthKey(e.target.value)}
+                  style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                >
+                  {Array.from(new Set([...historyPoints.map((h) => h.monthKey), monthKey]))
+                    .sort()
+                    .reverse()
+                    .map((key) => (
+                      <option value={key} key={key}>
+                        {formatMonthLabel(key)}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+            {(() => {
+              const totals = getMonthTotals(state.expenses, pieMonthKey);
+              const pieData = [
+                { name: translate(currentLang, "essen"), value: totals.essen, color: CATEGORY_COLORS.ESSEN },
+                { name: translate(currentLang, "hausmittel"), value: totals.hausmittel, color: CATEGORY_COLORS.HAUSMITTEL },
+                { name: translate(currentLang, "entertainment"), value: totals.entertainment, color: CATEGORY_COLORS.ENTERTAINMENT }
+              ];
+              const totalValue = pieData.reduce((sum, item) => sum + item.value, 0);
+              if (totalValue === 0) {
+                return <p className="muted">{translate(currentLang, "emptyState")}</p>;
+              }
+              return (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} />
+                    <Legend />
+                    <Pie data={pieData} dataKey="value" nameKey="name" outerRadius="70%">
+                      {pieData.map((entry, index) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -437,6 +621,53 @@ const App = () => {
   );
 };
 
+const ComparisonTable = ({
+  language,
+  comparisons
+}: {
+  language: Language;
+  comparisons: { key: CategoryFilter; label: string; snapshot: ReturnType<typeof computePaceSnapshot> }[];
+}) => {
+  const hasAnyHistory = comparisons.some((c) => c.snapshot.hasHistory);
+  return (
+    <div style={{ marginTop: 12 }}>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>{translate(language, "category")}</th>
+            <th>{translate(language, "currentLabel")}</th>
+            <th>{translate(language, "averageLabel")}</th>
+            <th>{translate(language, "deltaLabel")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {comparisons.map((c) => {
+            const { snapshot } = c;
+            const delta =
+              snapshot.average == null || snapshot.delta == null ? null : snapshot.delta;
+            const deltaClass = delta == null ? "" : delta > 0 ? "warning" : "positive";
+            const deltaText =
+              delta == null
+                ? "—"
+                : `${delta > 0 ? "+" : ""}${formatCurrency(delta, language)}`;
+            return (
+              <tr key={c.key}>
+                <td>{translate(language, c.label as any)}</td>
+                <td>{formatCurrency(snapshot.current, language)}</td>
+                <td>
+                  {snapshot.average != null ? formatCurrency(snapshot.average, language) : "—"}
+                </td>
+                <td className={deltaClass}>{deltaText}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      {!hasAnyHistory && <p className="muted small">{translate(language, "historyNeeded")}</p>}
+    </div>
+  );
+};
+
 const BudgetTile = ({
   label,
   spent,
@@ -477,12 +708,14 @@ const GoalsForm = ({
 }) => {
   const [essenGoal, setEssenGoal] = useState(goals.essenGoal ?? "");
   const [hausGoal, setHausGoal] = useState(goals.hausmittelGoal ?? "");
+  const [entertainmentGoal, setEntertainmentGoal] = useState(goals.entertainmentGoal ?? "");
   const [combinedGoal, setCombinedGoal] = useState(goals.combinedGoal ?? "");
 
   // Keep inputs in sync when month goals change (e.g., new month).
   useEffect(() => {
     setEssenGoal(goals.essenGoal ?? "");
     setHausGoal(goals.hausmittelGoal ?? "");
+    setEntertainmentGoal(goals.entertainmentGoal ?? "");
     setCombinedGoal(goals.combinedGoal ?? "");
   }, [goals]);
 
@@ -494,6 +727,7 @@ const GoalsForm = ({
           monthKey,
           essenGoal: essenGoal === "" ? null : Number(essenGoal),
           hausmittelGoal: hausGoal === "" ? null : Number(hausGoal),
+          entertainmentGoal: entertainmentGoal === "" ? null : Number(entertainmentGoal),
           combinedGoal: combinedGoal === "" ? null : Number(combinedGoal)
         });
       }}
@@ -518,6 +752,17 @@ const GoalsForm = ({
             step="0.01"
             value={hausGoal}
             onChange={(e) => setHausGoal(e.target.value === "" ? "" : Number(e.target.value))}
+            placeholder="0"
+          />
+        </div>
+        <div>
+          <label>{translate(language, "goalEntertainment")}</label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={entertainmentGoal}
+            onChange={(e) => setEntertainmentGoal(e.target.value === "" ? "" : Number(e.target.value))}
             placeholder="0"
           />
         </div>
