@@ -297,13 +297,13 @@ const App = () => {
       {tab === "dashboard" && (
         <div className="grid" style={{ gap: 20 }}>
           <div className="card">
-            <div className="row" style={{ justifyContent: "space-between" }}>
+            <div className="balance-card">
               <div>
                 <p className="muted">{translate(currentLang, "baseAmount")}</p>
                 <div className="stat-value">{formatCurrency(state.baseAmount, currentLang)}</div>
                 {baseIsNegative && <p className="warning small">{translate(currentLang, "warningNegative")}</p>}
               </div>
-              <div className="actions">
+              <div className="balance-actions">
                 <button className="btn" onClick={() => setShowExpense(true)}>
                   {translate(currentLang, "addExpense")}
                 </button>
@@ -455,9 +455,9 @@ const App = () => {
           </div>
 
           <div className="card chart-card">
-            <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <div className="chart-controls">
               <h3 className="section-title">{translate(currentLang, "lineChartTitle")}</h3>
-              <div className="row" style={{ gap: 8 }}>
+              <div className="control-row">
                 <button
                   className={`btn ${lineMode === "cumulative" ? "" : "ghost"}`}
                   onClick={() => setLineMode("cumulative")}
@@ -470,11 +470,13 @@ const App = () => {
                 >
                   {translate(currentLang, "modeDaily")}
                 </button>
+              </div>
+              <div className="control-row">
                 <span className="muted small">{translate(currentLang, "categoryFilter")}</span>
                 <select
+                  className="select-wide"
                   value={lineCategory}
                   onChange={(e) => setLineCategory(e.target.value as CategoryFilter)}
-                  style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #e5e7eb" }}
                 >
                   <option value="ALL">{translate(currentLang, "allCategories")}</option>
                   <option value="ESSEN">{translate(currentLang, "essen")}</option>
@@ -524,17 +526,17 @@ const App = () => {
           </div>
 
           <div className="card chart-card">
-            <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <div className="chart-controls">
               <h3 className="section-title">{translate(currentLang, "pieChartTitle")}</h3>
-              <div className="row" style={{ gap: 8 }}>
+              <div className="control-row">
                 <label className="muted small" htmlFor="pie-month">
                   {translate(currentLang, "monthLabel")}
                 </label>
                 <select
                   id="pie-month"
+                  className="select-wide"
                   value={pieMonthKey}
                   onChange={(e) => setPieMonthKey(e.target.value)}
-                  style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #e5e7eb" }}
                 >
                   {Array.from(new Set([...historyPoints.map((h) => h.monthKey), monthKey]))
                     .sort()
@@ -631,7 +633,7 @@ const ComparisonTable = ({
   const hasAnyHistory = comparisons.some((c) => c.snapshot.hasHistory);
   return (
     <div style={{ marginTop: 12 }}>
-      <table className="table">
+      <table className="table comparison-table">
         <thead>
           <tr>
             <th>{translate(language, "category")}</th>

@@ -219,7 +219,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     goalLabel: "Лимит",
     combined: "Суммарно",
     currentMonth: "Текущий месяц",
-    monthlyChartTitle: "Помсячные суммы",
+    monthlyChartTitle: "Помесячные суммы",
     lineChartTitle: "Текущий vs средний по дням",
     pieChartTitle: "Доля трат по категориям",
     emptyState: "В этом месяце пока нет расходов.",

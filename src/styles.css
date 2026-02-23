@@ -20,6 +20,7 @@
 body {
   margin: 0;
   background: radial-gradient(circle at top right, #f7f3e9, #f3ebde 45%, #ece3d5);
+  overflow-x: hidden;
 }
 
 #root {
@@ -72,6 +73,10 @@ body {
   border-radius: 16px;
   padding: 18px;
   box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .grid {
@@ -89,6 +94,10 @@ body {
 
 .grid.cols-4 {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.grid > .card {
+  min-width: 0;
 }
 
 .muted {
@@ -222,6 +231,8 @@ textarea {
 
 .chart-card {
   height: 360px;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .tabs {
@@ -239,6 +250,88 @@ textarea {
   font-size: 12px;
 }
 
+.balance-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.balance-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  min-width: 160px;
+}
+
+.chart-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.select-wide {
+  min-width: 180px;
+  width: 100%;
+  max-width: 240px;
+}
+
+.table.comparison-table td:last-child,
+.table.comparison-table th:last-child {
+  padding-right: 14px;
+  text-align: right;
+}
+
+.table.comparison-table td:nth-child(2),
+.table.comparison-table td:nth-child(3),
+.table.comparison-table th:nth-child(2),
+.table.comparison-table th:nth-child(3) {
+  white-space: nowrap;
+}
+
+.table.comparison-table td:first-child {
+  width: 40%;
+}
+
+.modal input[type="date"] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .balance-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .balance-actions {
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  .balance-actions .btn,
+  .balance-actions .btn.ghost {
+    flex: 1;
+    text-align: center;
+  }
+  .chart-card {
+    height: 320px;
+  }
+  .select-wide {
+    max-width: 100%;
+  }
+}
 @media (max-width: 640px) {
   .topbar {
     flex-direction: column;
