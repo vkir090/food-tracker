@@ -230,9 +230,33 @@ textarea {
 }
 
 .chart-card {
-  height: 360px;
   overflow: hidden;
   max-width: 100%;
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-scroll table {
+  min-width: 520px;
 }
 
 .tabs {
@@ -324,9 +348,6 @@ textarea {
   .balance-actions .btn.ghost {
     flex: 1;
     text-align: center;
-  }
-  .chart-card {
-    height: 320px;
   }
   .select-wide {
     max-width: 100%;

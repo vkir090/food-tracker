@@ -36,6 +36,8 @@ const CATEGORY_COLORS: Record<Category | "total", string> = {
   total: "#111827"
 };
 
+const STAT_CHART_HEIGHT_PX = 420;
+
 const randomId = () => Math.random().toString(36).slice(2, 10);
 
 const usePersistentState = () => {
@@ -381,34 +383,36 @@ const App = () => {
             {currentMonthExpenses.length === 0 ? (
               <p className="muted">{translate(currentLang, "emptyState")}</p>
             ) : (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>{translate(currentLang, "date")}</th>
-                    <th>{translate(currentLang, "category")}</th>
-                    <th>{translate(currentLang, "note")}</th>
-                    <th>{translate(currentLang, "amount")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentMonthExpenses
-                    .sort((a, b) => (a.date < b.date ? 1 : -1))
-                    .map((e) => (
-                      <tr key={e.id}>
-                        <td>{e.date}</td>
-                        <td>
-                          {e.category === "ESSEN"
-                            ? translate(currentLang, "essen")
-                            : e.category === "HAUSMITTEL"
-                            ? translate(currentLang, "hausmittel")
-                            : translate(currentLang, "entertainment")}
-                        </td>
-                        <td>{e.note ?? "-"}</td>
-                        <td>{formatCurrency(e.amount, currentLang)}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+              <div className="table-scroll">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>{translate(currentLang, "date")}</th>
+                      <th>{translate(currentLang, "category")}</th>
+                      <th>{translate(currentLang, "note")}</th>
+                      <th>{translate(currentLang, "amount")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentMonthExpenses
+                      .sort((a, b) => (a.date < b.date ? 1 : -1))
+                      .map((e) => (
+                        <tr key={e.id}>
+                          <td>{e.date}</td>
+                          <td>
+                            {e.category === "ESSEN"
+                              ? translate(currentLang, "essen")
+                              : e.category === "HAUSMITTEL"
+                              ? translate(currentLang, "hausmittel")
+                              : translate(currentLang, "entertainment")}
+                          </td>
+                          <td>{e.note ?? "-"}</td>
+                          <td>{formatCurrency(e.amount, currentLang)}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
@@ -416,7 +420,7 @@ const App = () => {
 
       {tab === "stats" && (
         <div className="grid" style={{ gap: 20 }}>
-          <div className="card chart-card">
+          <div className="card chart-card" style={{ height: STAT_CHART_HEIGHT_PX }}>
             <h3 className="section-title">{translate(currentLang, "monthlyChartTitle")}</h3>
             {historyPoints.length === 0 ? (
               <p className="muted">{translate(currentLang, "emptyState")}</p>
@@ -437,7 +441,7 @@ const App = () => {
             )}
           </div>
 
-          <div className="card chart-card">
+          <div className="card chart-card" style={{ height: STAT_CHART_HEIGHT_PX }}>
             <div className="chart-controls">
               <h3 className="section-title">{translate(currentLang, "lineChartTitle")}</h3>
               <div className="control-row">
@@ -508,7 +512,7 @@ const App = () => {
             )}
           </div>
 
-          <div className="card chart-card">
+          <div className="card chart-card" style={{ height: STAT_CHART_HEIGHT_PX }}>
             <div className="chart-controls">
               <h3 className="section-title">{translate(currentLang, "pieChartTitle")}</h3>
               <div className="control-row">
@@ -616,38 +620,40 @@ const ComparisonTable = ({
   const hasAnyHistory = comparisons.some((c) => c.snapshot.hasHistory);
   return (
     <div style={{ marginTop: 12 }}>
-      <table className="table comparison-table">
-        <thead>
-          <tr>
-            <th>{translate(language, "category")}</th>
-            <th>{translate(language, "currentLabel")}</th>
-            <th>{translate(language, "averageSymbol")}</th>
-            <th>{translate(language, "deltaLabel")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {comparisons.map((c) => {
-            const { snapshot } = c;
-            const delta =
-              snapshot.average == null || snapshot.delta == null ? null : snapshot.delta;
-            const deltaClass = delta == null ? "" : delta > 0 ? "warning" : "positive";
-            const deltaText =
-              delta == null
-                ? "—"
-                : `${delta > 0 ? "+" : ""}${formatCurrency(delta, language)}`;
-            return (
-              <tr key={c.key}>
-                <td>{translate(language, c.label as any)}</td>
-                <td>{formatCurrency(snapshot.current, language)}</td>
-                <td>
-                  {snapshot.average != null ? formatCurrency(snapshot.average, language) : "—"}
-                </td>
-                <td className={deltaClass}>{deltaText}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="table-scroll">
+        <table className="table comparison-table">
+          <thead>
+            <tr>
+              <th>{translate(language, "category")}</th>
+              <th>{translate(language, "currentLabel")}</th>
+              <th>{translate(language, "averageSymbol")}</th>
+              <th>{translate(language, "deltaLabel")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {comparisons.map((c) => {
+              const { snapshot } = c;
+              const delta =
+                snapshot.average == null || snapshot.delta == null ? null : snapshot.delta;
+              const deltaClass = delta == null ? "" : delta > 0 ? "warning" : "positive";
+              const deltaText =
+                delta == null
+                  ? "—"
+                  : `${delta > 0 ? "+" : ""}${formatCurrency(delta, language)}`;
+              return (
+                <tr key={c.key}>
+                  <td>{translate(language, c.label as any)}</td>
+                  <td>{formatCurrency(snapshot.current, language)}</td>
+                  <td>
+                    {snapshot.average != null ? formatCurrency(snapshot.average, language) : "—"}
+                  </td>
+                  <td className={deltaClass}>{deltaText}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
       {!hasAnyHistory && <p className="muted small">{translate(language, "historyNeeded")}</p>}
     </div>
   );
