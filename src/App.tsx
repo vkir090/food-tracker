@@ -420,28 +420,30 @@ const App = () => {
 
       {tab === "stats" && (
         <div className="grid" style={{ gap: 20 }}>
-          <div className="card chart-card" style={{ height: STAT_CHART_HEIGHT_PX }}>
+          <div className="card chart-card">
             <h3 className="section-title">{translate(currentLang, "monthlyChartTitle")}</h3>
             {historyPoints.length === 0 ? (
               <p className="muted">{translate(currentLang, "emptyState")}</p>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={historyPoints}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="monthKey" tickFormatter={formatMonthLabel} />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} labelFormatter={formatMonthLabel} />
-                  <Legend />
-                  <Bar dataKey="essen" fill={CATEGORY_COLORS.ESSEN} name={translate(currentLang, "essen")} />
-                  <Bar dataKey="hausmittel" fill={CATEGORY_COLORS.HAUSMITTEL} name={translate(currentLang, "hausmittel")} />
-                  <Bar dataKey="entertainment" fill={CATEGORY_COLORS.ENTERTAINMENT} name={translate(currentLang, "entertainment")} />
-                  <Bar dataKey="total" fill={CATEGORY_COLORS.total} name={translate(currentLang, "combined")} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div style={{ height: STAT_CHART_HEIGHT_PX }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={historyPoints}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="monthKey" tickFormatter={formatMonthLabel} />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} labelFormatter={formatMonthLabel} />
+                    <Legend />
+                    <Bar dataKey="essen" fill={CATEGORY_COLORS.ESSEN} name={translate(currentLang, "essen")} />
+                    <Bar dataKey="hausmittel" fill={CATEGORY_COLORS.HAUSMITTEL} name={translate(currentLang, "hausmittel")} />
+                    <Bar dataKey="entertainment" fill={CATEGORY_COLORS.ENTERTAINMENT} name={translate(currentLang, "entertainment")} />
+                    <Bar dataKey="total" fill={CATEGORY_COLORS.total} name={translate(currentLang, "combined")} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </div>
 
-          <div className="card chart-card" style={{ height: STAT_CHART_HEIGHT_PX }}>
+          <div className="card chart-card">
             <div className="chart-controls">
               <h3 className="section-title">{translate(currentLang, "lineChartTitle")}</h3>
               <div className="control-row">
@@ -477,42 +479,44 @@ const App = () => {
             ) : !dailySeries.hasHistory ? (
               <p className="muted">{translate(currentLang, "historyNeeded")}</p>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={dailySeries.days.map((day, idx) => ({
-                    day,
-                    current: lineMode === "cumulative" ? dailySeries.currentCumulative[idx] : dailySeries.currentDaily[idx],
-                    average: lineMode === "cumulative" ? dailySeries.averageCumulative[idx] : dailySeries.averageDaily[idx]
-                  }))}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="current"
-                    stroke={CATEGORY_COLORS.total}
-                    name={translate(currentLang, "currentLabel")}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="average"
-                    stroke={CATEGORY_COLORS.ESSEN}
-                    name={translate(currentLang, "averageLabel")}
-                    strokeWidth={2}
-                    strokeDasharray="4 4"
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <div style={{ height: STAT_CHART_HEIGHT_PX }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={dailySeries.days.map((day, idx) => ({
+                      day,
+                      current: lineMode === "cumulative" ? dailySeries.currentCumulative[idx] : dailySeries.currentDaily[idx],
+                      average: lineMode === "cumulative" ? dailySeries.averageCumulative[idx] : dailySeries.averageDaily[idx]
+                    }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="day" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="current"
+                      stroke={CATEGORY_COLORS.total}
+                      name={translate(currentLang, "currentLabel")}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="average"
+                      stroke={CATEGORY_COLORS.ESSEN}
+                      name={translate(currentLang, "averageLabel")}
+                      strokeWidth={2}
+                      strokeDasharray="4 4"
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </div>
 
-          <div className="card chart-card" style={{ height: STAT_CHART_HEIGHT_PX }}>
+          <div className="card chart-card">
             <div className="chart-controls">
               <h3 className="section-title">{translate(currentLang, "pieChartTitle")}</h3>
               <div className="control-row">
@@ -548,17 +552,19 @@ const App = () => {
                 return <p className="muted">{translate(currentLang, "emptyState")}</p>;
               }
               return (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} />
-                    <Legend />
-                    <Pie data={pieData} dataKey="value" nameKey="name" outerRadius="70%">
-                      {pieData.map((entry, index) => (
-                        <Cell key={entry.name} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+                <div style={{ height: STAT_CHART_HEIGHT_PX }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip formatter={(value) => formatCurrency(Number(value), currentLang)} />
+                      <Legend />
+                      <Pie data={pieData} dataKey="value" nameKey="name" outerRadius="70%">
+                        {pieData.map((entry, index) => (
+                          <Cell key={entry.name} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               );
             })()}
           </div>

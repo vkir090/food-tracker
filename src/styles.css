@@ -230,7 +230,7 @@ textarea {
 }
 
 .chart-card {
-  overflow: hidden;
+  overflow: visible;
   max-width: 100%;
 }
 
