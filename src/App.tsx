@@ -272,8 +272,6 @@ const App = () => {
     (e) => getMonthKeyFromDateString(e.date) === monthKey
   );
 
-  const baseIsNegative = state.baseAmount < 0;
-
   return (
     <div className="app-shell">
       <div className="topbar">
@@ -297,25 +295,12 @@ const App = () => {
       {tab === "dashboard" && (
         <div className="grid" style={{ gap: 20 }}>
           <div className="card">
-            <div className="balance-card">
-              <div>
-                <p className="muted">{translate(currentLang, "baseAmount")}</p>
-                <div className="stat-value">{formatCurrency(state.baseAmount, currentLang)}</div>
-                {baseIsNegative && <p className="warning small">{translate(currentLang, "warningNegative")}</p>}
-              </div>
-              <div className="balance-actions">
-                <button className="btn" onClick={() => setShowExpense(true)}>
-                  {translate(currentLang, "addExpense")}
-                </button>
-                <button className="btn ghost" onClick={() => setShowFunds(true)}>
-                  {translate(currentLang, "addFunds")}
-                </button>
-              </div>
+            <div className="row" style={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+              <h3 className="section-title" style={{ margin: 0 }}>{translate(currentLang, "remainingBudgetTitle")}</h3>
+              <button className="btn" onClick={() => setShowExpense(true)}>
+                {translate(currentLang, "addExpense")}
+              </button>
             </div>
-          </div>
-
-          <div className="card">
-            <h3 className="section-title">{translate(currentLang, "remainingBudgetTitle")}</h3>
             <div className="grid cols-4">
               <BudgetTile
                 label={translate(currentLang, "essen")}
@@ -348,49 +333,47 @@ const App = () => {
             </div>
           </div>
 
-          <div className="grid cols-2">
-            <div className="card">
-              <h3 className="section-title">{translate(currentLang, "paceTitle")}</h3>
-              {!combinedSnapshot || !combinedSnapshot.hasHistory || combinedSnapshot.average == null ? (
-                <p className="muted">{translate(currentLang, "paceNotEnough")}</p>
-              ) : (
-                <>
-                  <p>
-                    {combinedSnapshot.delta != null && combinedSnapshot.delta < 0
-                      ? translate(currentLang, "paceBelow", {
-                          amount: formatCurrency(Math.abs(combinedSnapshot.delta), currentLang)
-                        })
-                      : combinedSnapshot.delta != null && combinedSnapshot.delta > 0
-                      ? translate(currentLang, "paceAbove", {
-                          amount: formatCurrency(Math.abs(combinedSnapshot.delta), currentLang)
-                        })
-                      : translate(currentLang, "paceClose")}
-                  </p>
-                  <p className={motivation === "motivationPositive" ? "positive" : motivation === "motivationCaution" ? "warning" : "neutral"}>
-                    {motivation ? translate(currentLang, motivation) : translate(currentLang, "paceNotEnough")}
-                  </p>
-                </>
-              )}
-              {combinedSnapshot && (
-                <p className="muted small">
-                  {translate(currentLang, "currentMonth")}: {formatCurrency(combinedSnapshot.current, currentLang)}
-                  {combinedSnapshot.average != null
-                    ? ` • ${translate(currentLang, "averageLabel")}: ${formatCurrency(combinedSnapshot.average, currentLang)}`
-                    : ""}
-                </p>
-              )}
-              <ComparisonTable language={currentLang} comparisons={comparisons} />
-            </div>
+          <div className="card">
+            <h3 className="section-title">{translate(currentLang, "goalsTitle")}</h3>
+            <GoalsForm
+              language={currentLang}
+              goals={goals}
+              onSave={(g) => updateGoalsForMonth(g)}
+              monthKey={monthKey}
+            />
+          </div>
 
-            <div className="card">
-              <h3 className="section-title">{translate(currentLang, "goalsTitle")}</h3>
-              <GoalsForm
-                language={currentLang}
-                goals={goals}
-                onSave={(g) => updateGoalsForMonth(g)}
-                monthKey={monthKey}
-              />
-            </div>
+          <div className="card">
+            <h3 className="section-title">{translate(currentLang, "paceTitle")}</h3>
+            {!combinedSnapshot || !combinedSnapshot.hasHistory || combinedSnapshot.average == null ? (
+              <p className="muted">{translate(currentLang, "paceNotEnough")}</p>
+            ) : (
+              <>
+                <p>
+                  {combinedSnapshot.delta != null && combinedSnapshot.delta < 0
+                    ? translate(currentLang, "paceBelow", {
+                        amount: formatCurrency(Math.abs(combinedSnapshot.delta), currentLang)
+                      })
+                    : combinedSnapshot.delta != null && combinedSnapshot.delta > 0
+                    ? translate(currentLang, "paceAbove", {
+                        amount: formatCurrency(Math.abs(combinedSnapshot.delta), currentLang)
+                      })
+                    : translate(currentLang, "paceClose")}
+                </p>
+                <p className={motivation === "motivationPositive" ? "positive" : motivation === "motivationCaution" ? "warning" : "neutral"}>
+                  {motivation ? translate(currentLang, motivation) : translate(currentLang, "paceNotEnough")}
+                </p>
+              </>
+            )}
+            {combinedSnapshot && (
+              <p className="muted small">
+                {translate(currentLang, "currentMonth")}: {formatCurrency(combinedSnapshot.current, currentLang)}
+                {combinedSnapshot.average != null
+                  ? ` • ${translate(currentLang, "averageLabel")}: ${formatCurrency(combinedSnapshot.average, currentLang)}`
+                  : ""}
+              </p>
+            )}
+            <ComparisonTable language={currentLang} comparisons={comparisons} />
           </div>
 
           <div className="card">
